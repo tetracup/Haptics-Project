@@ -67,11 +67,21 @@ r.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
     dataFile.print(",");
     dataFile.print("gyroY");
     dataFile.print(",");
-    dataFile.println("gyroZ");
+    dataFile.print("gyroZ");
+    dataFile.print(",");
+    //Added
+    dataFile.print("Click");
+    dataFile.print(",");
+    dataFile.print("RotDir");
+    dataFile.print(",");
+    dataFile.println("RotVal");
+    //
     dataFile.close();
   }
 }
-
+bool click = False; 
+string rotDir = "NA"; 
+int rotVal = 0; 
 void loop() {
 
  r.loop();
@@ -126,7 +136,14 @@ void loop() {
     dataFile.print(",");
     dataFile.print(gyroY);
     dataFile.print(",");
-    dataFile.println(gyroZ);
+    dataFile.print(gyroZ);
+    //Added
+    dataFile.print(",");
+    dataFile.print(click);
+    dataFile.print(",");
+    dataFile.print(rotDir);
+    dataFile.print(",");
+    dataFile.println(rotVal);
     dataFile.close();
     // print to the serial port too:
     Serial.print(tiltX);
@@ -138,7 +155,7 @@ void loop() {
     Serial.print(gyroX);
     Serial.print(gyroY);
     Serial.println(gyroZ);
-
+    click = False; 
   }
   // if the file isn't open, pop up an error:
   else {
@@ -149,117 +166,24 @@ void loop() {
 }
 
 void rotate(Rotary& r) {
-   Serial.println(r.getPosition());
-    
-     File dataFile = SD.open("datalog.csv", FILE_WRITE);
-  if (dataFile) {
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.println(r.getPosition());
-    dataFile.close();
-}
-
+  Serial.println(r.getPosition());
+  rotVal = r.getPosition(); 
 }
 
 // on left or right rotation
 void showDirection(Rotary& r) {
   Serial.println(r.directionToString(r.getDirection()));
-
-       File dataFile = SD.open("datalog.csv", FILE_WRITE);
-  if (dataFile) {
-     dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.println(r.directionToString(r.getDirection()));
-    dataFile.close();
-}
+  rotDir = r.directionToString(r.getDirection()); 
 }
  
 // single click
 void click(Button2& btn) {
   Serial.println("Click!");
-        File dataFile = SD.open("datalog.csv", FILE_WRITE);
-  if (dataFile) {
-     dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.println("Click!");
-    dataFile.close();
-}
+  click = True; 
 }
 
 // long click
 void resetPosition(Button2& btn) {
   r.resetPosition();
-  Serial.println("Reset!");
-
-          File dataFile = SD.open("datalog.csv", FILE_WRITE);
-  if (dataFile) {
-     dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.println("Long click");
-    dataFile.close();
-}
+  click = True; 
 }
