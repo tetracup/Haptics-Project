@@ -79,8 +79,8 @@ r.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
     dataFile.close();
   }
 }
-bool click = False; 
-string rotDir = "NA"; 
+bool clickBool = false; 
+String rotDir = "NA"; 
 int rotVal = 0; 
 void loop() {
 
@@ -139,7 +139,7 @@ void loop() {
     dataFile.print(gyroZ);
     //Added
     dataFile.print(",");
-    dataFile.print(click);
+    dataFile.print(clickBool);
     dataFile.print(",");
     dataFile.print(rotDir);
     dataFile.print(",");
@@ -155,7 +155,7 @@ void loop() {
     Serial.print(gyroX);
     Serial.print(gyroY);
     Serial.println(gyroZ);
-    click = False; 
+    clickBool = false; 
   }
   // if the file isn't open, pop up an error:
   else {
@@ -179,11 +179,11 @@ void showDirection(Rotary& r) {
 // single click
 void click(Button2& btn) {
   Serial.println("Click!");
-  click = True; 
+  clickBool = true; 
 }
 
 // long click
 void resetPosition(Button2& btn) {
   r.resetPosition();
-  click = True; 
+  clickBool = true; 
 }
