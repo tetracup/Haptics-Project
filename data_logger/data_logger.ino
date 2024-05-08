@@ -44,7 +44,7 @@ r.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
     // don't do anything more:
     while (1);
   }
-
+  SD.remove("datalog.csv");
   File dataFile = SD.open("datalog.csv", FILE_WRITE);
 
   // if the file is available, write to it:
@@ -72,7 +72,9 @@ r.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
     dataFile.print(",");
     dataFile.print("RotDir");
     dataFile.print(",");
-    dataFile.println("RotVal");
+    dataFile.print("RotVal");
+    dataFile.print(",");
+    dataFile.println("Time");
     //
     dataFile.close();
   }
@@ -141,7 +143,9 @@ void loop() {
     dataFile.print(",");
     dataFile.print(rotDir);
     dataFile.print(",");
-    dataFile.println(rotVal);
+    dataFile.print(rotVal);
+    dataFile.print(",");
+    dataFile.println(millis());
     dataFile.close();
     clickBool = false; 
   }
