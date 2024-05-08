@@ -23,12 +23,10 @@ const int chipSelect =10;
 void setup() {
   
   // Open serial communications and wait for port to open:
-  Serial.begin(9600);
+
   Wire.begin();
   mpu.initialize();
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+  
 r.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
   r.setChangedHandler(rotate);
   r.setLeftRotationHandler(showDirection);
@@ -38,15 +36,15 @@ r.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
   b.setTapHandler(click);
   b.setLongClickHandler(resetPosition);
 
-  Serial.print("Initializing SD card...");
+ 
 
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
+
     // don't do anything more:
     while (1);
   }
-  Serial.println("card initialized.");
+
   File dataFile = SD.open("datalog.csv", FILE_WRITE);
 
   // if the file is available, write to it:
@@ -145,40 +143,30 @@ void loop() {
     dataFile.print(",");
     dataFile.println(rotVal);
     dataFile.close();
-    // print to the serial port too:
-    Serial.print(tiltX);
-    Serial.print(tiltY);
-    Serial.print(tiltZ);
-    Serial.print(accAngleX);
-    Serial.print(accAngleY);
-    Serial.print(accAngleZ);
-    Serial.print(gyroX);
-    Serial.print(gyroY);
-    Serial.println(gyroZ);
     clickBool = false; 
   }
   // if the file isn't open, pop up an error:
   else {
-    Serial.println("error opening datalog.csv");
+
   }
     }
   }
 }
 
 void rotate(Rotary& r) {
-  Serial.println(r.getPosition());
+
   rotVal = r.getPosition(); 
 }
 
 // on left or right rotation
 void showDirection(Rotary& r) {
-  Serial.println(r.directionToString(r.getDirection()));
+
   rotDir = r.directionToString(r.getDirection()); 
 }
  
 // single click
 void click(Button2& btn) {
-  Serial.println("Click!");
+
   clickBool = true; 
 }
 
