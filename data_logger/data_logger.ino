@@ -116,8 +116,13 @@ void loop() {
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  File dataFile = SD.open("datalog.csv", FILE_WRITE);
-
+  
+  int csvI = 0;
+  while(SD.exists("datalog" + String(csvI) + ".csv"))
+  {
+    csvI++;
+  }
+  File dataFile = SD.open("datalog" + String(csvI) + ".csv", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
     dataFile.print(tiltX);
