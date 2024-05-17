@@ -23,12 +23,10 @@ const int chipSelect =10;
 void setup() {
   
   // Open serial communications and wait for port to open:
-  Serial.begin(9600);
+
   Wire.begin();
   mpu.initialize();
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+  
 r.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
   r.setChangedHandler(rotate);
   r.setLeftRotationHandler(showDirection);
@@ -38,15 +36,15 @@ r.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
   b.setTapHandler(click);
   b.setLongClickHandler(resetPosition);
 
-  Serial.print("Initializing SD card...");
+ 
 
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
+
     // don't do anything more:
     while (1);
   }
-  Serial.println("card initialized.");
+  SD.remove("datalog.csv");
   File dataFile = SD.open("datalog.csv", FILE_WRITE);
 
   // if the file is available, write to it:
@@ -67,11 +65,23 @@ r.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
     dataFile.print(",");
     dataFile.print("gyroY");
     dataFile.print(",");
-    dataFile.println("gyroZ");
+    dataFile.print("gyroZ");
+    dataFile.print(",");
+    //Added
+    dataFile.print("Click");
+    dataFile.print(",");
+    dataFile.print("RotDir");
+    dataFile.print(",");
+    dataFile.print("RotVal");
+    dataFile.print(",");
+    dataFile.println("Time");
+    //
     dataFile.close();
   }
 }
-
+bool clickBool = false; 
+String rotDir = "NA"; 
+int rotVal = 0; 
 void loop() {
 
  r.loop();
@@ -106,8 +116,13 @@ void loop() {
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  File dataFile = SD.open("datalog.csv", FILE_WRITE);
-
+  
+  int csvI = 0;
+  while(SD.exists("datalog" + String(csvI) + ".csv"))
+  {
+    csvI++;
+  }
+  File dataFile = SD.open("datalog" + String(csvI) + ".csv", FILE_WRITE);
   // if the file is available, write to it:
   if (dataFile) {
     dataFile.print(tiltX);
@@ -126,140 +141,46 @@ void loop() {
     dataFile.print(",");
     dataFile.print(gyroY);
     dataFile.print(",");
-    dataFile.println(gyroZ);
+    dataFile.print(gyroZ);
+    //Added
+    dataFile.print(",");
+    dataFile.print(clickBool);
+    dataFile.print(",");
+    dataFile.print(rotDir);
+    dataFile.print(",");
+    dataFile.print(rotVal);
+    dataFile.print(",");
+    dataFile.println(millis());
     dataFile.close();
-    // print to the serial port too:
-    Serial.print(tiltX);
-    Serial.print(tiltY);
-    Serial.print(tiltZ);
-    Serial.print(accAngleX);
-    Serial.print(accAngleY);
-    Serial.print(accAngleZ);
-    Serial.print(gyroX);
-    Serial.print(gyroY);
-    Serial.println(gyroZ);
-
+    clickBool = false; 
   }
   // if the file isn't open, pop up an error:
   else {
-    Serial.println("error opening datalog.csv");
+
   }
     }
   }
 }
 
 void rotate(Rotary& r) {
-   Serial.println(r.getPosition());
-    
-     File dataFile = SD.open("datalog.csv", FILE_WRITE);
-  if (dataFile) {
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.println(r.getPosition());
-    dataFile.close();
-}
 
+  rotVal = r.getPosition(); 
 }
 
 // on left or right rotation
 void showDirection(Rotary& r) {
-  Serial.println(r.directionToString(r.getDirection()));
 
-       File dataFile = SD.open("datalog.csv", FILE_WRITE);
-  if (dataFile) {
-     dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.println(r.directionToString(r.getDirection()));
-    dataFile.close();
-}
+  rotDir = r.directionToString(r.getDirection()); 
 }
  
 // single click
 void click(Button2& btn) {
-  Serial.println("Click!");
-        File dataFile = SD.open("datalog.csv", FILE_WRITE);
-  if (dataFile) {
-     dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.println("Click!");
-    dataFile.close();
-}
+
+  clickBool = true; 
 }
 
 // long click
 void resetPosition(Button2& btn) {
   r.resetPosition();
-  Serial.println("Reset!");
-
-          File dataFile = SD.open("datalog.csv", FILE_WRITE);
-  if (dataFile) {
-     dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.print(" ");
-    dataFile.print(",");
-    dataFile.println("Long click");
-    dataFile.close();
-}
+  clickBool = true; 
 }
