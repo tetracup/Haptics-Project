@@ -16,11 +16,25 @@
 #define ROTARY_PIN1 2
 #define ROTARY_PIN2 3
 #define BUTTON_PIN 4
+#define VIB_PIN 5
 #define CLICKS_PER_STEP 4  // this number depends on your rotary encoder
 int lastButtonState = LOW;
 const int buttonPin = 4;  
 int debounceDelay = 5; 
 
+bool isVib = false; 
+int before;
+int vibIndex = 0; 
+
+const int length = 5;
+// Intensity 0-1, Length 0-, Gradual 0 or 1
+float v[length][3] = {
+{0.0,   2, 1},
+{0.7, 0.1, 0},
+{0.2, 0.1, 0},
+{0.7, 0.1, 0},
+{0.0, 0.1, 0}
+};
 
 // rotary encoder setting
 EncoderStepCounter encoder(ROTARY_PIN1, ROTARY_PIN2);
@@ -60,7 +74,8 @@ const char* GESTURES[] = {
 #define NUM_GESTURES (sizeof(GESTURES) / sizeof(GESTURES[0]))
 
 void setup() {
-   pinMode(4, INPUT_PULLUP);
+  pinMode(4, INPUT_PULLUP);
+  pinMode(VIB_PIN, OUTPUT);
   Serial.begin(9600);
   while (!Serial)
     ;
@@ -109,6 +124,12 @@ void setup() {
 void loop() {
   float aX, aY, aZ, gX, gY, gZ;
 
+  /*
+  if(isVib)
+  {
+    patternVibration(); 
+  }
+  */
   // wait for significant motion
   while (samplesRead == numSamples) {
 
@@ -122,6 +143,7 @@ void loop() {
     // if button is pressed:
     if (buttonState == LOW) {
       Serial.println("Play / Pause");
+      shortVibration();
     }
   }
   lastButtonState = buttonState;
@@ -133,10 +155,16 @@ void loop() {
     if (position != oldPosition && position < oldPosition) {
       Serial.println(position);
       Serial.println("back");
+
+      shortVibration();
+
       oldPosition = position;
     }else if (position != oldPosition && position > oldPosition){
       Serial.println(position);
       Serial.println("foward");
+
+      shortVibration(); 
+
       oldPosition = position;
     }
 
@@ -199,13 +227,77 @@ void loop() {
           }
         }
         Serial.println(GESTURES[max_index]);
+        if(max_index == 0)
+        {
+          //isVib = true; 
+          confirmVibration(); 
+        }
+        //Do Vibration patterns according to index 
         Serial.println();
       }
     }
   }
 }
 
+void shortVibration() {
+  analogWrite(VIB_PIN, 255);
+  delay(130);
+  analogWrite(VIB_PIN, 0);
+}
 
+void confirmVibration() {
+  analogWrite(VIB_PIN, 170);
+  delay(130);
+  analogWrite(VIB_PIN, 0);
+  delay(130);
+  analogWrite(VIB_PIN, 255);
+  delay(130);
+  analogWrite(VIB_PIN, 0);
+}
+/*
+void patternVibration()
+{
+  //If element exceeded beyond vector range
+  if(length+1 == vibIndex)
+  {
+    isVib = false; 
+    return; 
+  }
+	//If the intensity value is between 0 and 1
+	if (v[vibIndex][0] >= 0 && v[vibIndex][0] <= 1)
+	{
+    //Map intensity value to 0-255 and write to vib motor
+    if (v[vibIndex][2] == 0) 
+    {
+      analogWrite(VIB_PIN, v[vibIndex][0]*255);
+      Serial.println("test: " + String(v[vibIndex][0]*255));
+    }
+    else if(v[vibIndex][2] == 1 && vibIndex-1 != length)
+    {
+      
+      float secLen = v[vibIndex][1];
+      float perc = (millis()-before)/(secLen*1000);
+      float change = (v[vibIndex+1][0]-v[vibIndex][0])* perc;
+      
+      analogWrite(VIB_PIN, (v[vibIndex][0]+change)*255);
+      Serial.println((v[vibIndex][0]+change)*255);
+    }
+		
+	}
+	else
+	{
+    //Otherwise set it to none
+		digitalWrite(VIB_PIN, LOW);
+    Serial.println(0.0); 
+	}
+  //If the time has exceeded beyond the range allocated for v[i] then continue to next 
+  if(millis()-before > v[vibIndex][1]*1000)
+  {
+    before = millis();
+    vibIndex++; 
+  }
+}
+*/
 // // on change
 // void rotate(Rotary& r) {
 //   Serial.println(r.getPosition());
@@ -243,10 +335,3 @@ void loop() {
 //   Serial.println("Reset!");
 // }
 
-// /////////////////////////////////////////////////////////////////
-
-// void shortVibration() {
-//   analogWrite(5, 255);
-//   delay(80);
-//   analogWrite(5, 0);
-// }
