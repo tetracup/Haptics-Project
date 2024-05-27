@@ -25,7 +25,7 @@ int debounceDelay = 5;
 bool isVib = false; 
 int before;
 int vibIndex = 0; 
-
+int rotateFactor = 0; 
 const int length = 5;
 // Intensity 0-1, Length 0-, Gradual 0 or 1
 float v[length][3] = {
@@ -157,16 +157,17 @@ void loop() {
     if (position != oldPosition && position < oldPosition) {
       Serial.println(position);
       Serial.println("back");
-
-      shortVibration();
-
+      Serial.println(rotateFactor); 
+      Serial.println(position-oldPosition); 
+      rotateFactor = rotateFactor + (position - oldPosition);
+      RotateVibration(abs((float)rotateFactor/4.0f));
       oldPosition = position;
-    }else if (position != oldPosition && position > oldPosition){
+    } else if (position != oldPosition && position > oldPosition){
       Serial.println(position);
-      Serial.println("foward");
+      Serial.println("forward");
 
-      shortVibration(); 
-
+      rotateFactor = rotateFactor + (position - oldPosition);
+      RotateVibration(abs((float)rotateFactor/4.0f));
       oldPosition = position;
     }
 
@@ -258,6 +259,20 @@ void shortVibration() {
   analogWrite(VIB_PIN, 255);
   delay(130);
   analogWrite(VIB_PIN, 0);
+}
+
+void RotateVibration(float Intensity)
+{
+  Serial.println(Intensity);
+  if(Intensity > 0 && Intensity < 1)
+  {
+    analogWrite(VIB_PIN, 255 * Intensity);
+  }
+  else if(Intensity >= 1)
+  {
+    rotateFactor = 0; 
+    analogWrite(VIB_PIN, 0);
+  }
 }
 
 void shuffleVibration() {
