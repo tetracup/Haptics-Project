@@ -76,6 +76,7 @@ const char* GESTURES[] = {
 void setup() {
   pinMode(4, INPUT_PULLUP);
   pinMode(VIB_PIN, OUTPUT);
+  before = millis();
   Serial.begin(9600);
   while (!Serial)
     ;
@@ -122,31 +123,32 @@ void setup() {
 }
 
 void loop() {
-  float aX, aY, aZ, gX, gY, gZ;
-
-  /*
   if(isVib)
   {
-    patternVibration(); 
+    //Serial.println("perform");
+    //patternVibration(); 
+    //return; 
   }
-  */
+  float aX, aY, aZ, gX, gY, gZ;
+
+  
   // wait for significant motion
   while (samplesRead == numSamples) {
 
     // encoder reading
     encoder.tick();
-  int buttonState = digitalRead(buttonPin);
-  //  // if the button has changed:
-  if (buttonState != lastButtonState) {
-    // debounce the button:
-    delay(debounceDelay);
-    // if button is pressed:
-    if (buttonState == LOW) {
-      Serial.println("Play / Pause");
-      shortVibration();
+    int buttonState = digitalRead(buttonPin);
+    //  // if the button has changed:
+    if (buttonState != lastButtonState) {
+      // debounce the button:
+      delay(debounceDelay);
+      // if button is pressed:
+      if (buttonState == LOW) {
+        Serial.println("Play / Pause");
+        shortVibration();
+      }
     }
-  }
-  lastButtonState = buttonState;
+    lastButtonState = buttonState;
      
      
     
@@ -171,10 +173,8 @@ void loop() {
     if (IMU.accelerationAvailable()) {
       // read the acceleration data
       IMU.readAcceleration(aX, aY, aZ);
-
       // sum up the absolutes
       float aSum = fabs(aX) + fabs(aY) + fabs(aZ);
-
       // check if it's above the threshold
       if (aSum >= accelerationThreshold) {
         // reset the sample read count
@@ -183,7 +183,6 @@ void loop() {
       }
     }
   }
-
   // check if the all the required samples have been read since
   // the last time the significant motion was detected
   while (samplesRead < numSamples) {
@@ -213,7 +212,6 @@ void loop() {
             ;
           return;
         }
-
         // Loop through the output tensor values from the model
         int max_index = 0;
         float max_value = 0;
@@ -229,14 +227,31 @@ void loop() {
         Serial.println(GESTURES[max_index]);
         if(max_index == 0)
         {
-          //isVib = true; 
-          confirmVibration(); 
+          if(!isVib)
+          {
+            //isVib = true; 
+            //before = millis();
+          }
+          
+        }
+        switch(max_index)
+        {
+          case 0: 
+          shuffleVibration(); 
+          break; 
+
+          case 1: 
+          upVibration();
+          break; 
         }
         //Do Vibration patterns according to index 
-        Serial.println();
       }
     }
   }
+
+  
+  
+  
 }
 
 void shortVibration() {
@@ -245,24 +260,38 @@ void shortVibration() {
   analogWrite(VIB_PIN, 0);
 }
 
-void confirmVibration() {
-  analogWrite(VIB_PIN, 170);
-  delay(130);
-  analogWrite(VIB_PIN, 0);
-  delay(130);
+void shuffleVibration() {
   analogWrite(VIB_PIN, 255);
-  delay(130);
+  delay(140);
+  analogWrite(VIB_PIN, 0);
+  delay(70);
+  analogWrite(VIB_PIN, 255);
+  delay(140);
+  analogWrite(VIB_PIN, 0);
+  delay(70);
+  analogWrite(VIB_PIN, 255);
+  delay(140);
   analogWrite(VIB_PIN, 0);
 }
+
+void upVibration() {
+  analogWrite(VIB_PIN, 255);
+  delay(400);
+  analogWrite(VIB_PIN, 0);
+}
+
 /*
 void patternVibration()
 {
   //If element exceeded beyond vector range
   if(length+1 == vibIndex)
   {
+    Serial.println("performing");
     isVib = false; 
+    vibIndex = 0; 
     return; 
   }
+  
 	//If the intensity value is between 0 and 1
 	if (v[vibIndex][0] >= 0 && v[vibIndex][0] <= 1)
 	{
@@ -290,14 +319,17 @@ void patternVibration()
 		digitalWrite(VIB_PIN, LOW);
     Serial.println(0.0); 
 	}
+  
   //If the time has exceeded beyond the range allocated for v[i] then continue to next 
   if(millis()-before > v[vibIndex][1]*1000)
   {
+    Serial.println(vibIndex);
     before = millis();
     vibIndex++; 
   }
 }
 */
+
 // // on change
 // void rotate(Rotary& r) {
 //   Serial.println(r.getPosition());
