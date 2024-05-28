@@ -116,83 +116,44 @@ void setup() {
   Serial.println("setup end");
 }
 
+float aX, aY, aZ, gX, gY, gZ, aSum, gSum;
+float maxASum = 1.5;
+float maxGSum = 15.2;
 void loop() {
-  float aX, aY, aZ, gX, gY, gZ;
+  
 
   
   // wait for significant motion
-  while (samplesRead == numSamples) {
+  while (samplesRead == numSamples) 
+  {
 
-  
+    IMU.readAcceleration(aXt, aYt, aZy);
+    IMU.readAcceleration(aX, aY, aZ);
+    IMU.readGyroscope(gX,gY,gZ);
+
+    aSum = fabs(aX) + fabs(aY) + fabs(aZ);
+    gSum = fabs(gX) + fabs(gY) + fabs(gZ);
     
-  IMU.readAcceleration(aXt, aYt, aZy);
+    
+    //Tilt Vibration
+    detectVibrations(); 
 
-  if (aXt > 0.1 && aXt != lastaXt) 
-  {
-    aXt = 100 * aXt;
-    degreesX = map(aXt, 0, 97, 0, 90);
-    Serial.print("Tilting up ");
-    Serial.print(degreesX);
-    Serial.println("  degrees");
-    lastaXt = aXt;
-  }
-  if (aXt < -0.1 && aXt != lastaXt) {
-    aXt = 100 * aXt;
-    degreesX = map(aXt, 0, -100, 0, 90);
-    Serial.print("Tilting down ");
-    Serial.print(degreesX);
-    Serial.println("  degrees");
-    lastaXt = aXt;
-  }
-  IMU.readAcceleration(aX, aY, aZ);
-  IMU.readGyroscope(gX,gY,gZ);
-  float aSum = fabs(aX) + fabs(aY) + fabs(aZ);
-  float gSum = fabs(gX) + fabs(gY) + fabs(gZ);
-  float maxASum = 1.5;
-  float maxGSum = 15.2;
-  if (aYt > 0.1 && aYt != lastaYt && gSum < maxGSum && aSum < maxASum) {
-    tiltReset = false; 
-    aYt = 100 * aYt;
-    degreesY = map(aYt, 0, 97, 0, 90);
-    Serial.print("Tilting left ");
-    Serial.print(degreesY);
-    Serial.println("  degrees");
-    tiltVibration(degreesY); 
-     lastaYt = aYt;
-  }
-  else if (aYt < -0.1 && gSum < maxGSum && aSum < maxASum) {
-    tiltReset = false; 
-    aYt = 100 * aYt;
-    degreesY = map(aYt, 0, -100, 0, 90);
-    Serial.print("Tilting right ");
-    Serial.print(degreesY);
-    Serial.println("  degrees");
-    tiltVibration(degreesY); 
-     lastaYt = aYt;
-  } 
-  //Serial.println("detect" + String(aYt));
-  if (aYt > -0.1 && aYt < 0.1 && !tiltReset)
-  {
-    tiltReset = true; 
-    analogWrite(VIB_PIN, 0);
-  }
-
-  // encoder reading
-  encoder.tick();
-  int buttonState = digitalRead(buttonPin);
-  //  // if the button has changed:
-  if (buttonState != lastButtonState) 
-  {
-    // debounce the button:
-    delay(debounceDelay);
-    // if button is pressed:
-    if (buttonState == LOW) 
+    // encoder reading
+    encoder.tick();
+    int buttonState = digitalRead(buttonPin);
+    //  // if the button has changed:
+    if (buttonState != lastButtonState) 
     {
-      Serial.println("Play / Pause");
-      shortVibration();
+      // debounce the button:
+      delay(debounceDelay);
+      // if button is pressed:
+      if (buttonState == LOW) 
+      {
+        Serial.println("Play / Pause");
+        shortVibration();
+      }
     }
-  }
-  lastButtonState = buttonState;
+    lastButtonState = buttonState;
 
 
     
@@ -201,12 +162,14 @@ void loop() {
     if (position != oldPosition && position < oldPosition) {
       Serial.println(position);
       Serial.println("back");
-      Serial.println(rotateFactor); 
-      Serial.println(position-oldPosition); 
+
       rotateFactor = rotateFactor + (position - oldPosition);
       RotateVibration(abs((float)rotateFactor/4.0f));
       oldPosition = position;
-    } else if (position != oldPosition && position > oldPosition){
+
+    } 
+    else if (position != oldPosition && position > oldPosition)
+    {
       Serial.println(position);
       Serial.println("forward");
 
@@ -214,20 +177,12 @@ void loop() {
       RotateVibration(abs((float)rotateFactor/4.0f));
       oldPosition = position;
     }
-
-    if (IMU.accelerationAvailable()) {
-      // read the acceleration data
-      IMU.readAcceleration(aX, aY, aZ);
-     
-
-      // sum up the absolutes
-      float aSum = fabs(aX) + fabs(aY) + fabs(aZ);
-      // check if it's above the threshold
-      if (aSum >= accelerationThreshold) {
-        // reset the sample read count
-        samplesRead = 0;
-        break;
-      }
+    // check if it's above the threshold
+    if (aSum >= accelerationThreshold) 
+    {
+      // reset the sample read count
+      samplesRead = 0;
+      break;
     }
   }
   // check if the all the required samples have been read since
@@ -291,6 +246,32 @@ void loop() {
 }
 
 //Vibrations 
+
+void detectVibrations()
+{
+  if (aYt > 0.1 && aYt != lastaYt && gSum < maxGSum && aSum < maxASum) 
+  {
+    tiltReset = false; 
+    aYt = 100 * aYt;
+    degreesY = map(aYt, 0, 97, 0, 90);
+    tiltVibration(degreesY); 
+    lastaYt = aYt;
+  }
+  else if (aYt < -0.1 && gSum < maxGSum && aSum < maxASum) 
+  {
+    tiltReset = false; 
+    aYt = 100 * aYt;
+    degreesY = map(aYt, 0, -100, 0, 90);
+    tiltVibration(degreesY); 
+    lastaYt = aYt;
+  } 
+
+  if (aYt > -0.1 && aYt < 0.1 && !tiltReset)
+  {
+    tiltReset = true; 
+    analogWrite(VIB_PIN, 0);
+  }
+}
 void shortVibration() {
   analogWrite(VIB_PIN, 255);
   delay(130);
