@@ -19,8 +19,16 @@
 #define VIB_PIN 5
 #define CLICKS_PER_STEP 4  // this number depends on your rotary encoder
 int lastButtonState = LOW;
+int lastaXt = 0;
+int lastaYt = 0;
+
 const int buttonPin = 4;  
 int debounceDelay = 5; 
+int degreesY = 0;
+int degreesX = 0;
+float aXt = 0;
+float aYt = 0;
+float aZy = 0;
 
 bool isVib = false; 
 int before;
@@ -150,7 +158,41 @@ void loop() {
     }
     lastButtonState = buttonState;
      
-     
+      IMU.readAcceleration(aXt, aYt, aZy);
+
+       if (aXt > 0.1 && aXt != lastaXt) {
+    aXt = 100 * aXt;
+    degreesX = map(aXt, 0, 97, 0, 90);
+    Serial.print("Tilting up ");
+    Serial.print(degreesX);
+    Serial.println("  degrees");
+    lastaXt = aXt;
+  }
+  if (aXt < -0.1 && aXt != lastaXt) {
+    aXt = 100 * aXt;
+    degreesX = map(aXt, 0, -100, 0, 90);
+    Serial.print("Tilting down ");
+    Serial.print(degreesX);
+    Serial.println("  degrees");
+    lastaXt = aXt;
+  }
+  if (aYt > 0.1 && aYt != lastaYt) {
+    aYt = 100 * aYt;
+    degreesY = map(aYt, 0, 97, 0, 90);
+    Serial.print("Tilting left ");
+    Serial.print(degreesY);
+    Serial.println("  degrees");
+     lastaYt = aYt;
+  }
+  if (aYt < -0.1 ) {
+    aYt = 100 * aYt;
+    degreesY = map(aYt, 0, -100, 0, 90);
+    Serial.print("Tilting right ");
+    Serial.print(degreesY);
+    Serial.println("  degrees");
+     lastaYt = aYt;
+  } 
+
     
 
     int position = encoder.getPosition();
@@ -174,6 +216,8 @@ void loop() {
     if (IMU.accelerationAvailable()) {
       // read the acceleration data
       IMU.readAcceleration(aX, aY, aZ);
+     
+
       // sum up the absolutes
       float aSum = fabs(aX) + fabs(aY) + fabs(aZ);
       // check if it's above the threshold
@@ -192,6 +236,7 @@ void loop() {
       // read the acceleration and gyroscope data
       IMU.readAcceleration(aX, aY, aZ);
       IMU.readGyroscope(gX, gY, gZ);
+
 
       // normalize the IMU data between 0 to 1 and store in the model's
       // input tensor
@@ -250,7 +295,7 @@ void loop() {
     }
   }
 
-  
+   
   
   
 }
