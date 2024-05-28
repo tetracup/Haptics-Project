@@ -137,22 +137,7 @@ void loop() {
   // wait for significant motion
   while (samplesRead == numSamples) {
 
-  // encoder reading
-  encoder.tick();
-  int buttonState = digitalRead(buttonPin);
-  //  // if the button has changed:
-  if (buttonState != lastButtonState) 
-  {
-    // debounce the button:
-    delay(debounceDelay);
-    // if button is pressed:
-    if (buttonState == LOW) 
-    {
-      Serial.println("Play / Pause");
-      shortVibration();
-    }
-  }
-  lastButtonState = buttonState;
+  
     
   IMU.readAcceleration(aXt, aYt, aZy);
 
@@ -181,9 +166,11 @@ void loop() {
   //Serial.println(""); 
   float aSum = fabs(aX) + fabs(aY) + fabs(aZ);
   float gSum = fabs(gX) + fabs(gY) + fabs(gZ);
-  Serial.println(aSum);
-  Serial.println(gSum); 
-  if (aYt > 0.1 && aYt != lastaYt && gSum < 15.2 && aSum < 1.5) {
+  //erial.println(aSum);
+ //Serial.println(gSum); 
+ float maxASum = 1.5;
+ float maxGSum = 15.2;
+  if (aYt > 0.1 && aYt != lastaYt && gSum < maxGSum && aSum < maxASum) {
     aYt = 100 * aYt;
     degreesY = map(aYt, 0, 97, 0, 90);
     Serial.print("Tilting left ");
@@ -192,7 +179,7 @@ void loop() {
     tiltVibration(degreesY); 
      lastaYt = aYt;
   }
-  else if (aYt < -0.1 && gSum < 10.2 && aSum < 1.4) {
+  else if (aYt < -0.1 && gSum < maxGSum && aSum < maxASum) {
     aYt = 100 * aYt;
     degreesY = map(aYt, 0, -100, 0, 90);
     Serial.print("Tilting right ");
@@ -201,6 +188,28 @@ void loop() {
     tiltVibration(degreesY); 
      lastaYt = aYt;
   } 
+  //Serial.println("detect" + String(aYt));
+  if (aYt > -0.1 && aYt < 0.1)
+  {
+    analogWrite(VIB_PIN, 0);
+  }
+
+  // encoder reading
+  encoder.tick();
+  int buttonState = digitalRead(buttonPin);
+  //  // if the button has changed:
+  if (buttonState != lastButtonState) 
+  {
+    // debounce the button:
+    delay(debounceDelay);
+    // if button is pressed:
+    if (buttonState == LOW) 
+    {
+      Serial.println("Play / Pause");
+      shortVibration();
+    }
+  }
+  lastButtonState = buttonState;
 
 
     
