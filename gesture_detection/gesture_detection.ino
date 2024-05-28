@@ -1,23 +1,19 @@
-
 #include <Arduino_LSM9DS1.h>
-
 #include <TensorFlowLite.h>
 #include <tensorflow/lite/micro/all_ops_resolver.h>
 #include <tensorflow/lite/micro/micro_error_reporter.h>
 #include <tensorflow/lite/micro/micro_interpreter.h>
 #include <tensorflow/lite/schema/schema_generated.h>
 #include <tensorflow/lite/version.h>
-
 #include "model.h"
-
 #include <EncoderStepCounter.h>
-
 
 #define ROTARY_PIN1 2
 #define ROTARY_PIN2 3
 #define BUTTON_PIN 4
 #define VIB_PIN 5
 #define CLICKS_PER_STEP 4  // this number depends on your rotary encoder
+
 int lastButtonState = LOW;
 int lastaXt = 0;
 int lastaYt = 0;
@@ -30,23 +26,14 @@ float aXt = 0;
 float aYt = 0;
 float aZy = 0;
 
-bool isVib = false; 
-int before;
-int vibIndex = 0; 
+//For Vibration code
 int rotateFactor = 0; 
-const int length = 5;
-// Intensity 0-1, Length 0-, Gradual 0 or 1
-float v[length][3] = {
-{0.0,   2, 1},
-{0.7, 0.1, 0},
-{0.2, 0.1, 0},
-{0.7, 0.1, 0},
-{0.0, 0.1, 0}
-};
+bool tiltReset = false; 
 
 // rotary encoder setting
 EncoderStepCounter encoder(ROTARY_PIN1, ROTARY_PIN2);
 int oldPosition = 0;
+
 
 const float accelerationThreshold = 2.5;  // threshold of significant in G's
 const int numSamples = 119;
@@ -84,7 +71,6 @@ const char* GESTURES[] = {
 void setup() {
   pinMode(4, INPUT_PULLUP);
   pinMode(VIB_PIN, OUTPUT);
-  before = millis();
   Serial.begin(9600);
   while (!Serial)
     ;
@@ -160,17 +146,12 @@ void loop() {
   }
   IMU.readAcceleration(aX, aY, aZ);
   IMU.readGyroscope(gX,gY,gZ);
-  //Serial.print(String(aX) + ", " + String(aY) + ", " + String(aZ)); 
-  //Serial.println("");
-  //Serial.print(String(gX) + ", " + String(gY) + ", " + String(gZ));
-  //Serial.println(""); 
   float aSum = fabs(aX) + fabs(aY) + fabs(aZ);
   float gSum = fabs(gX) + fabs(gY) + fabs(gZ);
-  //erial.println(aSum);
- //Serial.println(gSum); 
- float maxASum = 1.5;
- float maxGSum = 15.2;
+  float maxASum = 1.5;
+  float maxGSum = 15.2;
   if (aYt > 0.1 && aYt != lastaYt && gSum < maxGSum && aSum < maxASum) {
+    tiltReset = false; 
     aYt = 100 * aYt;
     degreesY = map(aYt, 0, 97, 0, 90);
     Serial.print("Tilting left ");
@@ -180,6 +161,7 @@ void loop() {
      lastaYt = aYt;
   }
   else if (aYt < -0.1 && gSum < maxGSum && aSum < maxASum) {
+    tiltReset = false; 
     aYt = 100 * aYt;
     degreesY = map(aYt, 0, -100, 0, 90);
     Serial.print("Tilting right ");
@@ -189,8 +171,9 @@ void loop() {
      lastaYt = aYt;
   } 
   //Serial.println("detect" + String(aYt));
-  if (aYt > -0.1 && aYt < 0.1)
+  if (aYt > -0.1 && aYt < 0.1 && !tiltReset)
   {
+    tiltReset = true; 
     analogWrite(VIB_PIN, 0);
   }
 
@@ -290,15 +273,7 @@ void loop() {
           }
         }
         Serial.println(GESTURES[max_index]);
-        if(max_index == 0)
-        {
-          if(!isVib)
-          {
-            //isVib = true; 
-            //before = millis();
-          }
-          
-        }
+        //Choose which vibration pattern to perform on gesture
         switch(max_index)
         {
           case 0: 
@@ -313,12 +288,9 @@ void loop() {
       }
     }
   }
-
-   
-  
-  
 }
 
+//Vibrations 
 void shortVibration() {
   analogWrite(VIB_PIN, 255);
   delay(130);
@@ -366,91 +338,4 @@ void upVibration() {
   delay(400);
   analogWrite(VIB_PIN, 0);
 }
-
-/*
-void patternVibration()
-{
-  //If element exceeded beyond vector range
-  if(length+1 == vibIndex)
-  {
-    Serial.println("performing");
-    isVib = false; 
-    vibIndex = 0; 
-    return; 
-  }
-  
-	//If the intensity value is between 0 and 1
-	if (v[vibIndex][0] >= 0 && v[vibIndex][0] <= 1)
-	{
-    //Map intensity value to 0-255 and write to vib motor
-    if (v[vibIndex][2] == 0) 
-    {
-      analogWrite(VIB_PIN, v[vibIndex][0]*255);
-      Serial.println("test: " + String(v[vibIndex][0]*255));
-    }
-    else if(v[vibIndex][2] == 1 && vibIndex-1 != length)
-    {
-      
-      float secLen = v[vibIndex][1];
-      float perc = (millis()-before)/(secLen*1000);
-      float change = (v[vibIndex+1][0]-v[vibIndex][0])* perc;
-      
-      analogWrite(VIB_PIN, (v[vibIndex][0]+change)*255);
-      Serial.println((v[vibIndex][0]+change)*255);
-    }
-		
-	}
-	else
-	{
-    //Otherwise set it to none
-		digitalWrite(VIB_PIN, LOW);
-    Serial.println(0.0); 
-	}
-  
-  //If the time has exceeded beyond the range allocated for v[i] then continue to next 
-  if(millis()-before > v[vibIndex][1]*1000)
-  {
-    Serial.println(vibIndex);
-    before = millis();
-    vibIndex++; 
-  }
-}
-*/
-
-// // on change
-// void rotate(Rotary& r) {
-//   Serial.println(r.getPosition());
-// }
-
-// // on left or right rotation
-// void showDirection(Rotary& r) {
-//   Serial.print("direção");
-//   int direction = r.getDirection();
-//   Serial.println(direction);
-
-//   if (direction == 1) {
-//     Serial.println("left_arrow");
-//     shortVibration();
-
-//     delay(100);
-//     digitalWrite(LED_BUILTIN, LOW);
-//   } else if (direction == 255) {
-//     Serial.println("right_arrow");
-//     shortVibration();
-//   }
-// }
-
-// // single click
-// void click(Button2& btn) {
-//   Serial.println("Click!");
-//   shortVibration();
-// }
-
-
-
-// // long click
-// void resetPosition(Button2& btn) {
-//   r.resetPosition();
-//   Serial.println("Reset!");
-// }
 
