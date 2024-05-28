@@ -131,36 +131,33 @@ void setup() {
 }
 
 void loop() {
-  if(isVib)
-  {
-    //Serial.println("perform");
-    //patternVibration(); 
-    //return; 
-  }
   float aX, aY, aZ, gX, gY, gZ;
 
   
   // wait for significant motion
   while (samplesRead == numSamples) {
 
-    // encoder reading
-    encoder.tick();
-    int buttonState = digitalRead(buttonPin);
-    //  // if the button has changed:
-    if (buttonState != lastButtonState) {
-      // debounce the button:
-      delay(debounceDelay);
-      // if button is pressed:
-      if (buttonState == LOW) {
-        Serial.println("Play / Pause");
-        shortVibration();
-      }
+  // encoder reading
+  encoder.tick();
+  int buttonState = digitalRead(buttonPin);
+  //  // if the button has changed:
+  if (buttonState != lastButtonState) 
+  {
+    // debounce the button:
+    delay(debounceDelay);
+    // if button is pressed:
+    if (buttonState == LOW) 
+    {
+      Serial.println("Play / Pause");
+      shortVibration();
     }
-    lastButtonState = buttonState;
-     
-      IMU.readAcceleration(aXt, aYt, aZy);
+  }
+  lastButtonState = buttonState;
+    
+  IMU.readAcceleration(aXt, aYt, aZy);
 
-       if (aXt > 0.1 && aXt != lastaXt) {
+  if (aXt > 0.1 && aXt != lastaXt) 
+  {
     aXt = 100 * aXt;
     degreesX = map(aXt, 0, 97, 0, 90);
     Serial.print("Tilting up ");
@@ -176,22 +173,35 @@ void loop() {
     Serial.println("  degrees");
     lastaXt = aXt;
   }
-  if (aYt > 0.1 && aYt != lastaYt) {
+  IMU.readAcceleration(aX, aY, aZ);
+  IMU.readGyroscope(gX,gY,gZ);
+  //Serial.print(String(aX) + ", " + String(aY) + ", " + String(aZ)); 
+  //Serial.println("");
+  //Serial.print(String(gX) + ", " + String(gY) + ", " + String(gZ));
+  //Serial.println(""); 
+  float aSum = fabs(aX) + fabs(aY) + fabs(aZ);
+  float gSum = fabs(gX) + fabs(gY) + fabs(gZ);
+  Serial.println(aSum);
+  Serial.println(gSum); 
+  if (aYt > 0.1 && aYt != lastaYt && gSum < 15.2 && aSum < 1.5) {
     aYt = 100 * aYt;
     degreesY = map(aYt, 0, 97, 0, 90);
     Serial.print("Tilting left ");
     Serial.print(degreesY);
     Serial.println("  degrees");
+    tiltVibration(degreesY); 
      lastaYt = aYt;
   }
-  if (aYt < -0.1 ) {
+  else if (aYt < -0.1 && gSum < 10.2 && aSum < 1.4) {
     aYt = 100 * aYt;
     degreesY = map(aYt, 0, -100, 0, 90);
     Serial.print("Tilting right ");
     Serial.print(degreesY);
     Serial.println("  degrees");
+    tiltVibration(degreesY); 
      lastaYt = aYt;
   } 
+
 
     
 
@@ -317,6 +327,14 @@ void RotateVibration(float Intensity)
   {
     rotateFactor = 0; 
     analogWrite(VIB_PIN, 0);
+  }
+}
+
+void tiltVibration(float degrees)
+{
+  if(degrees > -45 || degrees < 45)
+  {
+    analogWrite(VIB_PIN, 255 * (abs(degrees)/45));
   }
 }
 
