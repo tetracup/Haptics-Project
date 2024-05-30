@@ -318,4 +318,3 @@ void upVibration() {
   delay(400);
   analogWrite(VIB_PIN, 0);
 }
-
