@@ -38,6 +38,7 @@ static const int kTotalRuntime = 8 * kSentenceTotalTimeMilliseconds;
 int before; 
 void setup()
 {
+  letter = 'K'; 
   // General setup.
   pinMode(LED_BUILTIN, OUTPUT);
 
