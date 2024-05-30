@@ -18,6 +18,7 @@ Nano33BleKeyboard bleKb("Music ball");
 int sTickerIndex = -1;
 
 static const char kSentence[] = "      ";
+const char letter = 'K'; 
 static const int kNumTickerSteps = 4;
 
 // How long it takes for the sentence to be written.
@@ -38,7 +39,7 @@ static const int kTotalRuntime = 8 * kSentenceTotalTimeMilliseconds;
 int before; 
 void setup()
 {
-  letter = 'K'; 
+  
   // General setup.
   pinMode(LED_BUILTIN, OUTPUT);
 
